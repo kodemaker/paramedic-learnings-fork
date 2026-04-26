@@ -1,6 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "./index";
-import { sources, topics, topicVersions } from "./schema";
+import { sources, topics, topicVersions, type TopicArea } from "./schema";
 
 type SeedSource = {
   title: string;
@@ -10,13 +10,7 @@ type SeedSource = {
 
 type SeedTopic = {
   name: string;
-  area:
-    | "cardiac"
-    | "airway"
-    | "trauma"
-    | "medical"
-    | "drugs"
-    | "operational";
+  area: TopicArea;
   owner: string;
   summary: string;
   guidance: string;
