@@ -1,16 +1,39 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-20">
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-        Paramedic Learnings
-      </h1>
-      <p className="mt-4 text-lg text-slate-500">
-        A starting point for the agentic-coding course. The skeleton is intentionally empty — the user stories in{" "}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm text-slate-700">docs/user-stories.md</code>{" "}
-        are yours to implement.
+      <p className="font-mono text-xs uppercase tracking-[0.22em] text-ink-subtle">
+        Operational reference
       </p>
-      <p className="mt-6 text-sm text-slate-500">
-        Begin with <strong>Story 1: Create a topic manually</strong>.
+      <h1 className="mt-4 text-3xl text-ink">
+        Trusted guidance for ambulance personnel.
+      </h1>
+      <p className="mt-6 text-lg text-ink-muted">
+        Capture clinical and operational topics, attach the evidence behind
+        them, and keep recommendations current as new field learning and
+        research arrives.
+      </p>
+
+      <div className="mt-10 flex items-center gap-5">
+        <Link
+          href="/topics"
+          className="inline-flex items-center rounded-sm bg-accent px-4 py-2 font-sans text-sm font-medium text-background transition-colors hover:bg-accent-hover"
+        >
+          Browse topics
+        </Link>
+        <Link
+          href="/topics"
+          className="font-sans text-sm font-medium text-ink underline-offset-4 hover:underline"
+        >
+          Create the first topic →
+        </Link>
+      </div>
+
+      <hr className="mt-16 border-t border-rule" />
+
+      <p className="mt-6 font-mono text-xs text-ink-subtle">
+        Begin with Story 1 — Create a topic manually.
       </p>
     </div>
   );
