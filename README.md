@@ -30,6 +30,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Where to Start
+
+The backlog is in [docs/user-stories.md](docs/user-stories.md). Begin with **Story 1: Create a topic manually** — every other story builds on having topics in the database.
+
+Once you define your first table in `src/db/schema.ts`, generate and apply the migration:
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
 ## Tech Stack
 
 - Next.js (App Router) + TypeScript
