@@ -46,3 +46,7 @@ next-env.d.ts
 
 # local smoke-test screenshots (saved to repo root by playwright)
 /topics-*.png
+
+# brainstorming visual-companion mockups
+/.superpowers/
+/.context/

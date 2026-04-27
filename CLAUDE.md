@@ -32,10 +32,12 @@ docker compose up -d   # Local Postgres 16 (see Architecture notes for the port)
 
 # After editing src/db/schema.ts:
 npx drizzle-kit generate   # Generate migration SQL into ./drizzle
+#   ↑ prompts interactively on destructive changes (column drops, type changes); stalls in
+#     non-TTY runs. Workaround: hand-author drizzle/<idx>_<name>.sql + meta/<idx>_snapshot.json.
 npx drizzle-kit migrate    # Apply migrations to DATABASE_URL
 ```
 
-There is no test runner configured yet — adding one is a participant decision.
+Tests run via `npm test` (Vitest + jsdom + @testing-library/react; setup in `vitest.config.ts` + `src/test/setup.ts`). For client-component tests, mock `next/navigation` — see `src/app/topics/new/CreateTopicForm.test.tsx` for the `useRouter` pattern.
 
 ## Architecture notes
 
@@ -46,7 +48,7 @@ There is no test runner configured yet — adding one is a participant decision.
 - **App Router layout** (`src/app/layout.tsx`) defines the page chrome (header + footer) and is locked to a light theme via Tailwind classes — `globals.css` does not toggle on `prefers-color-scheme` (see commit `ea951ba` for the reason: dark-mode contrast was broken). Keep this constraint when restyling.
 - **React 19 + Next 16 + Tailwind v4**. Tailwind v4 uses `@import "tailwindcss";` in `globals.css` and `@theme inline { ... }` for token mapping — no `tailwind.config.ts`.
 
-## Established patterns (from Story 1)
+## Established patterns (Story 1, extended in Stories 2–6)
 
 Follow this shape in subsequent stories:
 
@@ -54,6 +56,7 @@ Follow this shape in subsequent stories:
 - **Writes go through `/api/*` route handlers** with Zod validation at the boundary (e.g. `src/app/api/topics/route.ts`). Errors return as `{ error, issues: { fieldErrors } }` so client forms can render per-field messages without re-implementing validation.
 - **Client components are small islands** co-located with the page that uses them (e.g. `CreateTopicForm.tsx` next to `topics/page.tsx`). After a successful mutation they call `router.refresh()` to revalidate the server component — no full page reload.
 - **Schema** in `src/db/schema.ts` exports each table plus `$inferSelect` / `$inferInsert` types so callers can type rows without redeclaring shapes.
+- **Private App Router folders** (`_components/`, `_constants.ts`) hold shared, page-local code without becoming routes — see `src/app/topics/_components/SectionLabel.tsx` (in-page section eyebrow) and `src/app/topics/_constants.ts` (`AREA_LABELS`, derived from `topicArea.enumValues` so the schema enum stays single-source-of-truth for all six areas).
 
 ## Domain guardrails (from docs/README.md)
 

@@ -41,6 +41,18 @@ npx drizzle-kit generate
 npx drizzle-kit migrate
 ```
 
+## Database
+
+After cloning or pulling schema changes:
+
+```bash
+docker compose up -d
+npx drizzle-kit migrate
+npm run seed
+```
+
+The seed wipes existing topic data and inserts four example topics — useful for demoing Stories 2–6.
+
 ## Tech Stack
 
 - Next.js (App Router) + TypeScript
