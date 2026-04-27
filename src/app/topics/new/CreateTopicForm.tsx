@@ -3,15 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { topicArea, type TopicArea } from "@/db/schema";
-
-const AREA_LABELS: Record<TopicArea, string> = {
-  cardiac: "Cardiac",
-  airway: "Airway",
-  trauma: "Trauma",
-  medical: "Medical",
-  drugs: "Drugs",
-  operational: "Operational",
-};
+import { AREA_LABELS } from "../_constants";
 
 const AREAS = topicArea.enumValues.map((value) => ({
   value,
@@ -40,32 +32,35 @@ export function CreateTopicForm() {
     setFieldErrors({});
     setFormError(null);
 
-    const response = await fetch("/api/topics", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        summary,
-        area,
-        owner,
-        guidance,
-        rationale: rationale.trim() || undefined,
-      }),
-    });
+    try {
+      const response = await fetch("/api/topics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          summary,
+          area,
+          owner,
+          guidance,
+          rationale: rationale.trim() || undefined,
+        }),
+      });
 
-    if (response.ok) {
-      const created = await response.json();
-      router.push(`/topics/${created.id}`);
-      return;
-    }
+      if (response.ok) {
+        const created = await response.json();
+        router.push(`/topics/${created.id}`);
+        return;
+      }
 
-    const payload = await response.json().catch(() => null);
-    if (payload?.issues?.fieldErrors) {
-      setFieldErrors(payload.issues.fieldErrors as FieldErrors);
-    } else {
-      setFormError(payload?.error ?? "Something went wrong. Please try again.");
+      const payload = await response.json().catch(() => null);
+      if (payload?.issues?.fieldErrors) {
+        setFieldErrors(payload.issues.fieldErrors as FieldErrors);
+      } else {
+        setFormError(payload?.error ?? "Something went wrong. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }
 
   return (

@@ -3,6 +3,7 @@ import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { topicArea, topics, topicVersions } from "@/db/schema";
+import { AREA_LABELS } from "./_constants";
 
 export const dynamic = "force-dynamic";
 
@@ -19,15 +20,6 @@ const searchParamsSchema = z.object({
   q: z.string().trim().min(1).optional(),
   area: z.enum(TOPIC_AREAS).optional(),
 });
-
-const AREA_LABELS: Record<TopicArea, string> = {
-  cardiac: "Cardiac",
-  airway: "Airway",
-  trauma: "Trauma",
-  medical: "Medical",
-  drugs: "Drugs",
-  operational: "Operational",
-};
 
 function buildHref(area?: TopicArea, q?: string) {
   const params = new URLSearchParams();

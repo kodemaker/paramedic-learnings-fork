@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { sources, topics, topicVersions } from "@/db/schema";
+import { AREA_LABELS } from "../_constants";
 import { SectionLabel } from "../_components/SectionLabel";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ export default async function TopicDetailPage({
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <span className="rounded-full bg-accent px-3 py-0.5 font-mono text-[11px] uppercase tracking-[0.16em] text-background">
-          {row.area}
+          {AREA_LABELS[row.area]}
         </span>
         <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-muted">
           {row.owner} · Last updated {dateFormatter.format(row.updatedAt)} · v
