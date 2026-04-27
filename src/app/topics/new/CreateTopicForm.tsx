@@ -2,15 +2,21 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { topicArea, type TopicArea } from "@/db/schema";
 
-const AREAS = [
-  { value: "cardiac", label: "Cardiac" },
-  { value: "airway", label: "Airway" },
-  { value: "trauma", label: "Trauma" },
-  { value: "medical", label: "Medical" },
-  { value: "drugs", label: "Drugs" },
-  { value: "operational", label: "Operational" },
-] as const;
+const AREA_LABELS: Record<TopicArea, string> = {
+  cardiac: "Cardiac",
+  airway: "Airway",
+  trauma: "Trauma",
+  medical: "Medical",
+  drugs: "Drugs",
+  operational: "Operational",
+};
+
+const AREAS = topicArea.enumValues.map((value) => ({
+  value,
+  label: AREA_LABELS[value],
+}));
 
 type FieldErrors = Partial<
   Record<"name" | "summary" | "area" | "owner" | "guidance" | "rationale", string[]>
@@ -20,7 +26,7 @@ export function CreateTopicForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [summary, setSummary] = useState("");
-  const [area, setArea] = useState<string>("");
+  const [area, setArea] = useState<TopicArea | "">("");
   const [owner, setOwner] = useState("");
   const [guidance, setGuidance] = useState("");
   const [rationale, setRationale] = useState("");
@@ -97,7 +103,7 @@ export function CreateTopicForm() {
           name="area"
           required
           value={area}
-          onChange={(e) => setArea(e.target.value)}
+          onChange={(e) => setArea(e.target.value as TopicArea | "")}
           className="block w-full rounded-sm border border-rule bg-surface px-3 py-2 font-sans text-base text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           aria-invalid={Boolean(fieldErrors.area)}
         >

@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { CreateTopicForm } from "./CreateTopicForm";
 
+const pushMock = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: pushMock,
     refresh: vi.fn(),
   }),
 }));
@@ -30,6 +31,7 @@ const fillRequired = () => {
 describe("CreateTopicForm", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    pushMock.mockClear();
   });
 
   it("renders all six fields", () => {
@@ -58,6 +60,12 @@ describe("CreateTopicForm", () => {
       expect(fetchMock).toHaveBeenCalledWith(
         "/api/topics",
         expect.objectContaining({ method: "POST" }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith(
+        "/topics/f0e0b0a0-0000-0000-0000-000000000000",
       );
     });
   });
