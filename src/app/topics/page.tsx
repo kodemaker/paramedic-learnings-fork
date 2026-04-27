@@ -179,7 +179,7 @@ export default async function TopicsPage({
               <li key={row.id} className="py-6">
                 <Link
                   href={`/topics/${row.id}`}
-                  className="block transition-colors hover:text-accent"
+                  className="group block transition-colors"
                 >
                   <h3 className="font-serif text-xl text-ink group-hover:text-accent">
                     {row.name}
