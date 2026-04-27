@@ -28,8 +28,13 @@ describe("createTopicSchema", () => {
   });
 
   it("rejects missing summary", () => {
-    const { summary: _, ...withoutSummary } = valid;
-    const result = createTopicSchema.safeParse(withoutSummary);
+    const { name, area, owner, guidance } = valid;
+    const result = createTopicSchema.safeParse({
+      name,
+      area,
+      owner,
+      guidance,
+    });
     expect(result.success).toBe(false);
   });
 
