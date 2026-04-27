@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { sources, topics, topicVersions } from "@/db/schema";
+import { SectionLabel } from "../_components/SectionLabel";
 
 export const dynamic = "force-dynamic";
 
@@ -82,18 +83,14 @@ export default async function TopicDetailPage({
 
       <hr className="my-8 border-rule" />
 
-      <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted">
-        Guidance
-      </p>
+      <SectionLabel>Guidance</SectionLabel>
       <div className="mt-3 space-y-4 text-base leading-relaxed text-ink whitespace-pre-line">
         {row.guidance}
       </div>
 
       <hr className="my-8 border-rule" />
 
-      <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted">
-        Rationale
-      </p>
+      <SectionLabel>Rationale</SectionLabel>
       {row.rationale ? (
         <div className="mt-3 space-y-4 text-base leading-relaxed text-ink whitespace-pre-line">
           {row.rationale}
@@ -106,9 +103,7 @@ export default async function TopicDetailPage({
 
       <hr className="my-8 border-rule" />
 
-      <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted">
-        Based on
-      </p>
+      <SectionLabel>Based on</SectionLabel>
       {sourceRows.length === 0 ? (
         <p className="mt-3 font-serif italic text-ink-muted">
           No sources cited yet.
