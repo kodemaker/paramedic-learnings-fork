@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { SubmitSourceForm } from "./SubmitSourceForm";
 
 const pushMock = vi.fn();
@@ -62,5 +62,90 @@ describe("SubmitSourceForm", () => {
       target: { value: "research" },
     });
     expect(screen.getByLabelText(/^title/i)).toHaveValue("My title");
+  });
+
+  it("submits a debrief payload to /api/sources and redirects on 201", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({ id: "11111111-2222-3333-4444-555555555555" }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "Curbside arrest" },
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-04-15" },
+    });
+    fireEvent.change(screen.getByLabelText(/^content/i), {
+      target: { value: "Bystander CPR before arrival." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/sources",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0][1] as RequestInit).body as string,
+    );
+    expect(body).toEqual({
+      sourceType: "debrief",
+      title: "Curbside arrest",
+      eventDate: "2026-04-15",
+      content: "Bystander CPR before arrival.",
+    });
+
+    await waitFor(() => {
+      expect(refreshMock).toHaveBeenCalled();
+      expect(pushMock).toHaveBeenCalledWith(
+        "/sources/11111111-2222-3333-4444-555555555555",
+      );
+    });
+  });
+
+  it("submits a research payload omitting hidden debrief fields", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "abcd" }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "research" },
+    });
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "Adrenaline timing" },
+    });
+    fireEvent.change(screen.getByLabelText(/citation/i), {
+      target: { value: "Smith 2025" },
+    });
+    fireEvent.change(screen.getByLabelText(/summary/i), {
+      target: { value: "Earlier dosing improves outcomes." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0][1] as RequestInit).body as string,
+    );
+    expect(body).toEqual({
+      sourceType: "research",
+      title: "Adrenaline timing",
+      citation: "Smith 2025",
+      content: "Earlier dosing improves outcomes.",
+    });
+    expect(body).not.toHaveProperty("eventDate");
   });
 });

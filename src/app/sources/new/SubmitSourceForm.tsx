@@ -36,7 +36,46 @@ export function SubmitSourceForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // Implementation comes in Task 9.
+    if (type === "") return;
+
+    setSubmitting(true);
+    setFieldErrors({});
+    setFormError(null);
+
+    const payload =
+      type === "debrief"
+        ? { sourceType: "debrief" as const, title, eventDate, content }
+        : {
+            sourceType: "research" as const,
+            title,
+            citation,
+            ...(url.trim() ? { url: url.trim() } : {}),
+            content,
+          };
+
+    try {
+      const response = await fetch("/api/sources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const created = await response.json();
+        router.refresh();
+        router.push(`/sources/${created.id}`);
+        return;
+      }
+
+      const errBody = await response.json().catch(() => null);
+      if (errBody?.issues?.fieldErrors) {
+        setFieldErrors(errBody.issues.fieldErrors as FieldErrors);
+      } else {
+        setFormError(errBody?.error ?? "Something went wrong. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
