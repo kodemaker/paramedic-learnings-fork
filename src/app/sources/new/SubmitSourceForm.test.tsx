@@ -148,4 +148,59 @@ describe("SubmitSourceForm", () => {
     });
     expect(body).not.toHaveProperty("eventDate");
   });
+
+  it("renders per-field errors from a 400 response", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "Validation failed",
+          issues: {
+            formErrors: [],
+            fieldErrors: { title: ["Title is required"] },
+          },
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-04-15" },
+    });
+    fireEvent.change(screen.getByLabelText(/^content/i), {
+      target: { value: "x" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("renders a top-level error from a 500 response", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response("server fell over", { status: 500 }),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "x" },
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-04-15" },
+    });
+    fireEvent.change(screen.getByLabelText(/^content/i), {
+      target: { value: "x" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    expect(
+      await screen.findByText(/something went wrong/i),
+    ).toBeInTheDocument();
+  });
 });
