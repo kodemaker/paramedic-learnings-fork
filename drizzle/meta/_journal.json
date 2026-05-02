@@ -15,6 +15,13 @@
       "when": 1777203300000,
       "tag": "0001_versioned_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777750269792,
+      "tag": "0002_daily_blockbuster",
+      "breakpoints": true
     }
   ]
 }
