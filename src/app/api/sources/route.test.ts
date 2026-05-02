@@ -30,4 +30,53 @@ describe("createSourceSchema", () => {
     void url;
     expect(createSourceSchema.safeParse(withoutUrl).success).toBe(true);
   });
+
+  it("rejects a debrief without eventDate", () => {
+    const { eventDate, ...withoutDate } = validDebrief;
+    void eventDate;
+    expect(createSourceSchema.safeParse(withoutDate).success).toBe(false);
+  });
+
+  it("rejects a debrief with malformed eventDate", () => {
+    const result = createSourceSchema.safeParse({
+      ...validDebrief,
+      eventDate: "not-a-date",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a research payload without citation", () => {
+    const { citation, ...withoutCitation } = validResearch;
+    void citation;
+    expect(createSourceSchema.safeParse(withoutCitation).success).toBe(false);
+  });
+
+  it("rejects an unknown sourceType", () => {
+    const result = createSourceSchema.safeParse({
+      ...validDebrief,
+      sourceType: "incident",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty title", () => {
+    const result = createSourceSchema.safeParse({ ...validDebrief, title: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty content", () => {
+    const result = createSourceSchema.safeParse({
+      ...validDebrief,
+      content: "",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a research payload with an invalid url", () => {
+    const result = createSourceSchema.safeParse({
+      ...validResearch,
+      url: "not a url",
+    });
+    expect(result.success).toBe(false);
+  });
 });
