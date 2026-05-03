@@ -59,13 +59,19 @@ export default async function SourceDetailPage({
 
       <hr className="my-8 border-rule" />
 
-      {row.sourceType === "debrief" && row.eventDate && (
+      {row.sourceType === "debrief" && (
         <>
-          <p className="font-mono text-xs uppercase tracking-[0.22em] text-ink-subtle">
-            Event date
-          </p>
-          <p className="mt-2 font-serif text-lg text-ink">{row.eventDate}</p>
-          <hr className="my-8 border-rule" />
+          {row.eventDate && (
+            <>
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-ink-subtle">
+                Event date
+              </p>
+              <p className="mt-2 font-serif text-lg text-ink">
+                {dateFormatter.format(new Date(row.eventDate))}
+              </p>
+              <hr className="my-8 border-rule" />
+            </>
+          )}
           <p className="font-mono text-xs uppercase tracking-[0.22em] text-ink-subtle">
             Content
           </p>

@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted (implemented on branch `stories-9-11-source-submission`)
 
 ## Context
 
