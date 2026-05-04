@@ -1,10 +1,18 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "./index";
-import { sources, topics, topicVersions, type TopicArea } from "./schema";
+import {
+  sources,
+  topics,
+  topicVersions,
+  type SourceType,
+  type TopicArea,
+} from "./schema";
 
 type SeedSource = {
   title: string;
-  citation: string;
+  content: string;
+  sourceType: SourceType;
+  citation?: string;
   url?: string;
 };
 
@@ -32,13 +40,15 @@ const seedTopics: SeedTopic[] = [
     sources: [
       {
         title: "AHA 2020 ACLS Guidelines",
-        citation:
-          "Panchal AR et al. Circulation 142(16) S366–S468. 2020.",
+        sourceType: "research",
+        content: "Panchal AR et al. Circulation 142(16) S366–S468. 2020.",
+        citation: "Panchal AR et al. Circulation 142(16) S366–S468. 2020.",
       },
       {
         title: "PARAMEDIC2 — Adrenaline in OHCA",
-        citation:
-          "Perkins GD et al. NEJM 379:711–721. 2018. RCT, n=8014.",
+        sourceType: "research",
+        content: "Perkins GD et al. NEJM 379:711–721. 2018. RCT, n=8014.",
+        citation: "Perkins GD et al. NEJM 379:711–721. 2018. RCT, n=8014.",
       },
     ],
   },
@@ -55,8 +65,9 @@ const seedTopics: SeedTopic[] = [
     sources: [
       {
         title: "ERC Guidelines — Cardiac arrest in special circumstances",
-        citation:
-          "Lott C et al. Resuscitation 161:152–219. 2021.",
+        sourceType: "research",
+        content: "Lott C et al. Resuscitation 161:152–219. 2021.",
+        citation: "Lott C et al. Resuscitation 161:152–219. 2021.",
       },
     ],
   },
@@ -73,8 +84,9 @@ const seedTopics: SeedTopic[] = [
     sources: [
       {
         title: "AIRWAYS-2 — Supraglottic vs ETI in OHCA",
-        citation:
-          "Benger JR et al. JAMA 320(8):779–791. 2018. RCT, n=9296.",
+        sourceType: "research",
+        content: "Benger JR et al. JAMA 320(8):779–791. 2018. RCT, n=9296.",
+        citation: "Benger JR et al. JAMA 320(8):779–791. 2018. RCT, n=9296.",
       },
     ],
   },
@@ -126,8 +138,10 @@ async function seed() {
       await db.insert(sources).values(
         t.sources.map((s) => ({
           topicVersionId: version.id,
+          sourceType: s.sourceType,
           title: s.title,
-          citation: s.citation,
+          content: s.content,
+          citation: s.citation ?? null,
           url: s.url ?? null,
         })),
       );

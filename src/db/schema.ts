@@ -1,4 +1,5 @@
 import {
+  date,
   integer,
   pgEnum,
   pgTable,
@@ -15,6 +16,8 @@ export const topicArea = pgEnum("topic_area", [
   "drugs",
   "operational",
 ]);
+
+export const sourceType = pgEnum("source_type", ["debrief", "research"]);
 
 export const topics = pgTable("topics", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -49,11 +52,18 @@ export const topicVersions = pgTable("topic_versions", {
 
 export const sources = pgTable("sources", {
   id: uuid("id").defaultRandom().primaryKey(),
-  topicVersionId: uuid("topic_version_id")
-    .notNull()
-    .references(() => topicVersions.id, { onDelete: "cascade" }),
+  // Nullable: a source exists before being linked to a topic version.
+  // Linking happens in Stories 15/18.
+  topicVersionId: uuid("topic_version_id").references(() => topicVersions.id, {
+    onDelete: "cascade",
+  }),
+  sourceType: sourceType("source_type").notNull(),
   title: text("title").notNull(),
-  citation: text("citation").notNull(),
+  content: text("content").notNull(),
+  // Required at the Zod layer when sourceType === "debrief".
+  eventDate: date("event_date"),
+  // Required at the Zod layer when sourceType === "research".
+  citation: text("citation"),
   url: text("url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -67,3 +77,4 @@ export type NewTopicVersion = typeof topicVersions.$inferInsert;
 export type Source = typeof sources.$inferSelect;
 export type NewSource = typeof sources.$inferInsert;
 export type TopicArea = (typeof topicArea.enumValues)[number];
+export type SourceType = (typeof sourceType.enumValues)[number];

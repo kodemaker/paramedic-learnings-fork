@@ -1,0 +1,206 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { SubmitSourceForm } from "./SubmitSourceForm";
+
+const pushMock = vi.fn();
+const refreshMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushMock,
+    refresh: refreshMock,
+  }),
+}));
+
+describe("SubmitSourceForm", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    pushMock.mockClear();
+    refreshMock.mockClear();
+  });
+
+  it("renders only the source type picker initially", () => {
+    render(<SubmitSourceForm />);
+    expect(screen.getByLabelText(/source type/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^title/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/event date/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/citation/i)).not.toBeInTheDocument();
+  });
+
+  it("reveals debrief fields when debrief is picked", () => {
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    expect(screen.getByLabelText(/^title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/event date/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^content/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/citation/i)).not.toBeInTheDocument();
+  });
+
+  it("reveals research fields when research is picked", () => {
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "research" },
+    });
+    expect(screen.getByLabelText(/^title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/citation/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/url/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/summary/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/event date/i)).not.toBeInTheDocument();
+  });
+
+  it("preserves title when switching from debrief to research", () => {
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "My title" },
+    });
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "research" },
+    });
+    expect(screen.getByLabelText(/^title/i)).toHaveValue("My title");
+  });
+
+  it("submits a debrief payload to /api/sources and redirects on 201", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({ id: "11111111-2222-3333-4444-555555555555" }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "Curbside arrest" },
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-04-15" },
+    });
+    fireEvent.change(screen.getByLabelText(/^content/i), {
+      target: { value: "Bystander CPR before arrival." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/sources",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0][1] as RequestInit).body as string,
+    );
+    expect(body).toEqual({
+      sourceType: "debrief",
+      title: "Curbside arrest",
+      eventDate: "2026-04-15",
+      content: "Bystander CPR before arrival.",
+    });
+
+    await waitFor(() => {
+      expect(refreshMock).toHaveBeenCalled();
+      expect(pushMock).toHaveBeenCalledWith(
+        "/sources/11111111-2222-3333-4444-555555555555",
+      );
+    });
+  });
+
+  it("submits a research payload omitting hidden debrief fields", async () => {
+    const fetchMock = vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "abcd" }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "research" },
+    });
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "Adrenaline timing" },
+    });
+    fireEvent.change(screen.getByLabelText(/citation/i), {
+      target: { value: "Smith 2025" },
+    });
+    fireEvent.change(screen.getByLabelText(/summary/i), {
+      target: { value: "Earlier dosing improves outcomes." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0][1] as RequestInit).body as string,
+    );
+    expect(body).toEqual({
+      sourceType: "research",
+      title: "Adrenaline timing",
+      citation: "Smith 2025",
+      content: "Earlier dosing improves outcomes.",
+    });
+    expect(body).not.toHaveProperty("eventDate");
+  });
+
+  it("renders per-field errors from a 400 response", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "Validation failed",
+          issues: {
+            formErrors: [],
+            fieldErrors: { title: ["Title is required"] },
+          },
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-04-15" },
+    });
+    fireEvent.change(screen.getByLabelText(/^content/i), {
+      target: { value: "x" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    expect(await screen.findByText("Title is required")).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("renders a top-level error from a 500 response", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response("server fell over", { status: 500 }),
+    );
+
+    render(<SubmitSourceForm />);
+    fireEvent.change(screen.getByLabelText(/source type/i), {
+      target: { value: "debrief" },
+    });
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "x" },
+    });
+    fireEvent.change(screen.getByLabelText(/event date/i), {
+      target: { value: "2026-04-15" },
+    });
+    fireEvent.change(screen.getByLabelText(/^content/i), {
+      target: { value: "x" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit source/i }));
+
+    expect(
+      await screen.findByText(/something went wrong/i),
+    ).toBeInTheDocument();
+  });
+});

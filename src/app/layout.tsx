@@ -56,6 +56,12 @@ export default function RootLayout({
               >
                 Topics
               </Link>
+              <Link
+                href="/sources"
+                className="ml-6 border-b border-transparent pb-0.5 transition-colors hover:border-ink hover:text-ink"
+              >
+                Sources
+              </Link>
             </nav>
           </div>
         </header>
